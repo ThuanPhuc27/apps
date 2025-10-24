@@ -1,0 +1,125 @@
+image:
+  repository: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/checkoutservice
+  tag: latest
+imagePullSecrets:
+- name: ecr-credentials
+deployments:
+- name: checkoutservice
+  replicasCount: 1
+  prometheusEnabled: true
+  istioEnabled: true  
+  service:
+    name: checkoutservice
+    # HTTPPort: 5050
+    gRPCPort: 5050
+    healthType: grpc
+    health:
+      # livenessCMD: ["/bin/grpc_health_probe", "-addr=:5050"]
+      # readinessCMD: ["/bin/grpc_health_probe", "-addr=:5050"]
+      livenessPort: 5050
+      readinessPort: 5050
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 5
+      timeoutSeconds: 3
+port: 5050
+env:
+  PORT: 5050
+  PRODUCT_CATALOG_SERVICE_ADDR: "secret:checkoutservice-secrets.PRODUCT_CATALOG_SERVICE_ADDR"
+  SHIPPING_SERVICE_ADDR: "secret:checkoutservice-secrets.SHIPPING_SERVICE_ADDR"
+  PAYMENT_SERVICE_ADDR: "secret:checkoutservice-secrets.PAYMENT_SERVICE_ADDR"
+  EMAIL_SERVICE_ADDR: "secret:checkoutservice-secrets.EMAIL_SERVICE_ADDR"
+  CURRENCY_SERVICE_ADDR: "secret:checkoutservice-secrets.CURRENCY_SERVICE_ADDR"
+  CART_SERVICE_ADDR: "secret:checkoutservice-secrets.CART_SERVICE_ADDR"
+resources:
+  requests:
+    cpu: "200m"
+    memory: "100Mi"
+  limits:
+    cpu: "200m"
+    memory: "100Mi"
+infisical:
+  enabled: false
+secretProviderClass:
+  enabled: true
+  name: checkoutservice
+  provider: aws
+  parameters:
+    region: ap-southeast-1
+    objects: |
+      - objectName: "tool-cluster-dev-general-secret"
+        objectType: "secretsmanager"
+        jmesPath:
+          - path: REDIS_ADDR
+            objectAlias: REDIS_ADDR
+          - path: PRODUCT_CATALOG_SERVICE_ADDR
+            objectAlias: PRODUCT_CATALOG_SERVICE_ADDR
+          - path: SHIPPING_SERVICE_ADDR
+            objectAlias: SHIPPING_SERVICE_ADDR
+          - path: PAYMENT_SERVICE_ADDR
+            objectAlias: PAYMENT_SERVICE_ADDR
+          - path: EMAIL_SERVICE_ADDR
+            objectAlias: EMAIL_SERVICE_ADDR
+          - path: CURRENCY_SERVICE_ADDR
+            objectAlias: CURRENCY_SERVICE_ADDR
+          - path: CART_SERVICE_ADDR
+            objectAlias: CART_SERVICE_ADDR
+          - path: AD_SERVICE_ADDR
+            objectAlias: AD_SERVICE_ADDR
+          - path: RECOMMENDATION_SERVICE_ADDR
+            objectAlias: RECOMMENDATION_SERVICE_ADDR
+          - path: CHECKOUT_SERVICE_ADDR
+            objectAlias: CHECKOUT_SERVICE_ADDR
+  secretObjects:
+  - secretName: "checkoutservice-secrets"
+    type: Opaque
+    data:
+    - key: "REDIS_ADDR"
+      objectName: "REDIS_ADDR"
+    - key: "PRODUCT_CATALOG_SERVICE_ADDR"
+      objectName: "PRODUCT_CATALOG_SERVICE_ADDR"
+    - key: "SHIPPING_SERVICE_ADDR"
+      objectName: "SHIPPING_SERVICE_ADDR"
+    - key: "PAYMENT_SERVICE_ADDR"
+      objectName: "PAYMENT_SERVICE_ADDR"
+    - key: "EMAIL_SERVICE_ADDR"
+      objectName: "EMAIL_SERVICE_ADDR"
+    - key: "CURRENCY_SERVICE_ADDR"
+      objectName: "CURRENCY_SERVICE_ADDR"
+    - key: "CART_SERVICE_ADDR"
+      objectName: "CART_SERVICE_ADDR"
+    - key: "AD_SERVICE_ADDR"
+      objectName: "AD_SERVICE_ADDR"
+    - key: "RECOMMENDATION_SERVICE_ADDR"
+      objectName: "RECOMMENDATION_SERVICE_ADDR"
+    - key: "CHECKOUT_SERVICE_ADDR"
+      objectName: "CHECKOUT_SERVICE_ADDR"
+serviceAccountName: "checkoutservice"
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::043902793725:role/tool-cluster-dev-secrets-csi-role
+istio:
+  enabled: true
+  destinationRule:
+    enabled: true
+    host: checkoutservice
+    trafficPolicy: 
+      outlierDetection:
+        consecutive5xxErrors: 5
+        interval: 30s              
+        baseEjectionTime: 30s       
+        maxEjectionPercent: 30
+        minHealthPercent: 70   
+  authorizationPolicy:
+    enabled: true
+    action: ALLOW
+    rules:
+    - from:
+      - source:
+          principals: [
+            "cluster.local/ns/online-boutique/sa/frontend"
+          ] 
+      to:
+      - operation:
+          ports: ["10000"]

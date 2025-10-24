@@ -1,0 +1,59 @@
+image:
+  repository: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/shippingservice
+  tag: latest
+imagePullSecrets:
+- name: ecr-credentials
+deployments:
+- name: shippingservice
+  replicasCount: 1
+  prometheusEnabled: true
+  istioEnabled: true  
+  service:
+    name: shippingservice
+    # HTTPPort: 50051
+    gRPCPort: 50051
+    healthType: grpc
+    health:
+      livenessPort: 50051
+      readinessPort: 50051
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 5
+      timeoutSeconds: 3
+env:
+  PORT: 50051
+port: 50051
+resources:
+  requests:
+    cpu: "100m"
+    memory: "50Mi"
+  limits:
+    cpu: "100m"
+    memory: "50Mi"
+infisical:
+  enabled: false
+istio:
+  enabled: true
+  destinationRule:
+    enabled: true
+    host: shippingservice
+    trafficPolicy: 
+      outlierDetection:
+        consecutive5xxErrors: 5
+        interval: 30s              
+        baseEjectionTime: 30s       
+        maxEjectionPercent: 30
+        minHealthPercent: 70      
+  authorizationPolicy:
+    enabled: true
+    action: ALLOW
+    rules:
+    - from:
+      - source:
+          principals: [
+            "cluster.local/ns/online-boutique/sa/frontend",
+            "cluster.local/ns/online-boutique/sa/checkoutservice",
+          ] 
+      to:
+      - operation:
+          ports: ["10000"]

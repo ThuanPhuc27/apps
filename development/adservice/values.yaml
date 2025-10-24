@@ -1,0 +1,59 @@
+image:
+  repository: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/adservice
+  tag: latest
+imagePullSecrets:
+- name: ecr-credentials
+deployments:
+- name: adservice
+  replicasCount: 1
+  istioEnabled: true  
+  prometheusEnabled: true
+  service:
+    name: adservice
+    # HTTPPort: 9555
+    gRPCPort: 9555
+    healthType: grpc
+    health:
+      livenessPort: 9555
+      readinessPort: 9555
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 5
+      timeoutSeconds: 3
+
+env:
+  PORT: 9555
+resources:
+  requests:
+    cpu: "100m"
+    memory: "100Mi"
+  limits:
+    cpu: "100m"
+    memory: "100Mi"
+infisical:
+  enabled: false
+istio:
+  enabled: true
+  destinationRule:
+    enabled: true
+    host: adservice
+    trafficPolicy: 
+      outlierDetection:
+        consecutive5xxErrors: 5
+        interval: 30s              
+        baseEjectionTime: 30s       
+        maxEjectionPercent: 30
+        minHealthPercent: 70   
+  peerAuthentication:
+    enabled: true
+    mtlsMode: PERMISSIVE
+  authorizationPolicy:
+    enabled: true
+    action: ALLOW
+    rules:
+    - from:
+      - source:
+          principals: ["cluster.local/ns/online-boutique/sa/frontend"] 
+      to:
+      - operation:
+          ports: ["10000"]

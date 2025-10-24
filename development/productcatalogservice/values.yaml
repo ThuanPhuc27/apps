@@ -1,0 +1,60 @@
+image:
+  repository: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/productcatalogservice
+  tag: latest
+imagePullSecrets:
+- name: ecr-credentials
+deployments:
+- name: productcatalogservice
+  replicasCount: 1
+  prometheusEnabled: true
+  istioEnabled: true  
+  service:
+    name: productcatalogservice
+    # HTTPPort: 3550
+    gRPCPort: 3550
+    healthType: grpc
+    health:
+      livenessPort: 3550
+      readinessPort: 3550
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 5
+      timeoutSeconds: 3
+env:
+  PORT: 3550
+port: 3550
+resources:
+  requests:
+    cpu: "100m"
+    memory: "100Mi"
+  limits:
+    cpu: "100m"
+    memory: "100Mi"
+infisical:
+  enabled: false
+istio:
+  enabled: true
+  destinationRule:
+    enabled: true
+    host: productcatalogservice
+    trafficPolicy: 
+      outlierDetection:
+        consecutive5xxErrors: 5
+        interval: 30s              
+        baseEjectionTime: 30s       
+        maxEjectionPercent: 30
+        minHealthPercent: 70      
+  authorizationPolicy:
+    enabled: true
+    action: ALLOW
+    rules:
+    - from:
+      - source:
+          principals: [
+            "cluster.local/ns/online-boutique/sa/frontend",
+            "cluster.local/ns/online-boutique/sa/checkoutservice",
+            "cluster.local/ns/online-boutique/sa/recommendationservice"
+          ] 
+      to:
+      - operation:
+          ports: ["10000"]

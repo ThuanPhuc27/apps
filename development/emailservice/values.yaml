@@ -1,0 +1,54 @@
+image:
+  repository: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/emailservice
+  tag: latest
+imagePullSecrets:
+- name: ecr-credentials
+deployments:
+- name: emailservice
+  replicasCount: 1
+  prometheusEnabled: true
+  istioEnabled: true  
+  service:
+    name: emailservice
+    # HTTPPort: 5000
+    gRPCPort: 5000
+    healthType: grpc
+    health:
+      livenessPort: 5000
+      readinessPort: 5000
+env:
+  PORT: 5000
+port: 5000
+resources:
+  requests:
+    cpu: "100m"
+    memory: "50Mi"
+  limits:
+    cpu: "100m"
+    memory: "50Mi"
+infisical:
+  enabled: false
+istio:
+  enabled: true
+  destinationRule:
+    enabled: true
+    host: emailservice
+    trafficPolicy: 
+      outlierDetection:
+        consecutive5xxErrors: 5
+        interval: 30s              
+        baseEjectionTime: 30s       
+        maxEjectionPercent: 30
+        minHealthPercent: 70      
+  authorizationPolicy:
+    enabled: true
+    action: ALLOW
+    rules:
+    - from:
+      - source:
+          principals: [
+            "cluster.local/ns/online-boutique/sa/frontend",
+          ] 
+      to:
+      - operation:
+          ports: ["10000"]

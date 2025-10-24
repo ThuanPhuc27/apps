@@ -1,0 +1,59 @@
+image:
+  repository: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/currencyservice
+  tag: latest
+imagePullSecrets:
+- name: ecr-credentials
+deployments:
+- name: currencyservice
+  replicasCount: 1
+  prometheusEnabled: true
+  istioEnabled: true  
+  service:
+    name: currencyservice
+    # HTTPPort: 7000
+    gRPCPort: 7000
+    healthType: grpc
+    health:
+      livenessPort: 7000
+      readinessPort: 7000
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 5
+      timeoutSeconds: 3
+env:
+  PORT: 7000
+  DISABLE_PROFILER: 1
+resources:
+  requests:
+    cpu: "200m"
+    memory: "200Mi"
+  limits:
+    cpu: "200m"
+    memory: "300Mi"
+infisical:
+  enabled: false
+istio:
+  enabled: true
+  destinationRule:
+    enabled: true
+    host: currencyservice
+    trafficPolicy: 
+      outlierDetection:
+        consecutive5xxErrors: 5
+        interval: 30s              
+        baseEjectionTime: 30s       
+        maxEjectionPercent: 30
+        minHealthPercent: 70      
+  authorizationPolicy:
+    enabled: true
+    action: ALLOW
+    rules:
+    - from:
+      - source:
+          principals: [
+            "cluster.local/ns/online-boutique/sa/frontend",
+            "cluster.local/ns/online-boutique/sa/checkoutservice"
+          ] 
+      to:
+      - operation:
+          ports: ["10000"]
