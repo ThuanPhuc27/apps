@@ -1,0 +1,8 @@
+helm:
+  parameters:
+  - name: image.name
+    value: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/frontend
+    forcestring: true
+  - name: image.tag
+    value: c64fbb8f-dev
+    forcestring: true
