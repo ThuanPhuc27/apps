@@ -1,0 +1,8 @@
+helm:
+  parameters:
+  - name: image.name
+    value: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/cartservice
+    forcestring: true
+  - name: image.tag
+    value: 5545bf3b-dev
+    forcestring: true
