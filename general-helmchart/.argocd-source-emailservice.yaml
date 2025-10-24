@@ -1,8 +1,0 @@
-helm:
-  parameters:
-  - name: image.name
-    value: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/emailservice
-    forcestring: true
-  - name: image.tag
-    value: ed605836-dev
-    forcestring: true
