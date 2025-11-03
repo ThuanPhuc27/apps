@@ -4,5 +4,5 @@ helm:
     value: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/checkoutservice
     forcestring: true
   - name: image.tag
-    value: db49c530-dev
+    value: 1631ac0a-dev
     forcestring: true
