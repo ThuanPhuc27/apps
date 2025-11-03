@@ -4,5 +4,5 @@ helm:
     value: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/recommendationservice
     forcestring: true
   - name: image.tag
-    value: 3b717c71-dev
+    value: 772c04d2-dev
     forcestring: true
