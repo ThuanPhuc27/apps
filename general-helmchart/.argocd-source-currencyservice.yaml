@@ -4,5 +4,5 @@ helm:
     value: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/currencyservice
     forcestring: true
   - name: image.tag
-    value: d7c1a655-dev
+    value: a02759aa-dev
     forcestring: true
