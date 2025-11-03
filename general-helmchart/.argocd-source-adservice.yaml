@@ -4,5 +4,5 @@ helm:
     value: 043902793725.dkr.ecr.ap-southeast-1.amazonaws.com/adservice
     forcestring: true
   - name: image.tag
-    value: e5aa6c36-dev
+    value: a7da126c-dev
     forcestring: true
